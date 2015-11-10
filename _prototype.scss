@@ -1,0 +1,535 @@
+
+
+@import 'sassyJson';
+
+//import string handler library
+
+@import "../sassy-strings/dist/SassyStrings";
+
+//a collection of abstract blocks, or block-types
+
+$abstract-blocks: () !default;
+$abstract-block-modifiers: () !default;
+$abstract-block-element-separator: '__'  !default;
+$abstract-block-modifier-separator: '--' !default;
+$static-block-separator: '-' !default;
+$static-block-element-separator: '__' !default;
+$static-block-modifier-separator: '--' !default;
+$static-block-class: 'static' !default;
+$debug-mode: false !default;
+$debug-mode-class: ".debug" !default;
+$block-class: ".b_" !default;
+
+
+//add an abstract block to the collection
+
+@function define-abstract-block( $block ){
+  
+	$abstract-blocks: map-merge( $abstract-blocks, ( $block: () ) ) !global;
+
+	@return 0;
+
+}
+
+
+//define a property for existing abstract block
+//both elements and modifiers are properties of abstract blocks
+//they are differentiated by prefix either __ for elements or -- for modifiers
+
+
+@function define-abstract-block-property($type, $element){
+
+  $blocks : $abstract-blocks !global;
+
+  //give an error if the abstract block is not defined
+
+  @if not map-has-key( $blocks, $type ) {
+
+  	//@error "Cannot add property: '#{$element}' to undefined block: '#{$type}' ";
+
+  }
+  
+  //get the value of the block type (a list of elements)
+  $b-elem : map-get( $blocks, $type );
+  
+  //append new element to the list of elements
+  $b-elem : append($b-elem, $element);
+  
+  //merge block type list with global b-types 
+  $abstract-blocks: map-merge($abstract-blocks, ($type : $b-elem)) !global;
+
+  
+  @return 0;
+
+}
+
+//@return end most portion of the selector, with given prefix
+
+@function get-selector-suffix( $selector, $sep ){
+
+    $parts: str-explode( $selector, $sep );
+
+    @if( length($parts) > 1 ) 
+    {
+    	$pos:    length( $parts );
+    	$suffix: nth( $parts, $pos );
+    	@return  $suffix;
+    }
+
+    @return false; 
+
+}
+
+//remove part of a string
+
+@function str-remove( $str, $remove ){
+
+	@return str-implode( str-explode( $str, $remove ) );
+
+}
+
+//mixin will attempt to parse given block(s)
+//and register respective type
+
+@mixin block{
+
+	$mod-sep: $abstract-block-modifier-separator !global;
+	$el-sep:  $abstract-block-element-separator  !global;
+
+	@if ( type-of( & ) == "null" )
+	{
+
+		//@error "abs-component must be nested under a placeholder";
+
+	}
+
+    @for $i from 1 through length( & ) {
+
+    	$is-mod:   false;  
+    	$is-el:    false;
+    	$selector: nth( nth( &, $i ), 1 );
+
+
+    	//throw an error if block is not placeholder
+    	@if( str-index( $selector, "%" ) != 1 )
+    	{
+
+    		//@error "#{$selector} is not a placeholder; block mixin can only be used with placeholders";
+    	}
+
+        //if is modifier
+        $modifier: get-selector-suffix( $selector, $mod-sep );
+
+        @if( $modifier ) 
+        {
+        	$is-mod:   true;
+        	$selector: str-remove( $selector, $mod-sep+$modifier );
+        }
+
+        //if is element
+        $element: get-selector-suffix( $selector, $el-sep );
+
+        @if( $element )
+        {
+ 			$is-el:    true;
+ 			$selector: str-remove( $selector, $el-sep+$element );
+        }
+
+        //remove the placeholder % prefix
+        $selector: str-remove( $selector, "%" );
+
+
+        //if it's an element modifier
+        @if( $is-mod and $is-el )
+        {
+        	@include abs-block-modifier( $selector, $element, $modifier );
+        }
+
+        //if it's a block modifier
+        @elseif( $is-mod )
+        {
+        	@include abs-block-modifier( $selector, $modifier );
+        }
+
+        //if it's a element
+        @elseif( $is-el )
+        {
+        	@include abs-block-property( $selector, $element );
+        }
+
+        //if it's a plain old block
+        @else
+        {
+            @include abs-block( $selector );
+        }
+
+    }
+
+}
+
+
+
+//mixin wrapper for defining abstract block
+//defines a placeholder for the block
+
+
+@mixin abs-block( $block ){
+	
+	//store for adding properties later
+
+	$n: define-abstract-block( $block );
+
+	%#{$block}{
+
+	    @content;
+
+	}
+
+}
+
+//create an element for the block, 
+//and a placeholder
+
+@mixin abs-block-property( $block, $element ){
+	
+	$separator:      $abstract-block-element-separator !global;
+
+	$el-placeholder: #{$block}#{$separator}#{$element};
+
+	//add property to the abstract block
+
+	$n: define-abstract-block-property( $block, #{$separator}#{$element} );
+
+	//create placeholder
+
+	%#{$el-placeholder}{
+
+		@content;
+
+	} 
+
+}
+
+
+//define modifiers for abstract blocks and elements
+//param: $block, $element, $modifier 
+//or
+//$block, $modifier
+
+
+@mixin abs-block-modifier( $args... ){
+	
+
+	$block: nth($args, 1);
+	$el:          '';
+  	$property:    '';
+  	$placeholder: '';
+  	$el-sep:      $abstract-block-element-separator !global; 
+  	$mod-sep:     $abstract-block-modifier-separator !global; 
+
+	@if length( $args ) == 3 {
+
+		$el: nth( $args, 2 );
+		$mod: nth( $args, 3 );
+
+		$placeholder: #{$block}#{$el-sep}#{$el}#{$mod-sep}#{$mod};
+		$property:    #{$el-sep}#{$el}#{$mod-sep}#{$mod};
+
+	}
+
+	@elseif length( $args ) == 2 {
+
+		$mod: nth( $args, 2 );
+
+		$placeholder: #{$block}#{$mod-sep}#{$mod};
+		$property:    #{$mod-sep}#{$mod};
+
+	}
+
+	@else {
+
+		//@error 'incorrect number of arguments for abstract block modifier';
+
+	}
+
+
+	$n: define-abstract-block-property( $block, $property );
+
+	//add modifier to map
+	$abstract-block-modifiers: map-merge( $abstract-block-modifiers, ( $placeholder : $placeholder ) );
+
+	%#{$placeholder}{
+
+		@content;
+
+	}
+
+}
+
+
+//extend an abstract block
+//by inheriting all it's properties
+
+
+@mixin extend-block($block, $abstract: false){
+
+
+	//if second argument is not set, 
+	//extend the currect seletor
+
+	@if( $abstract == false )
+	{
+
+		$abstract: $block;
+		$block: '&';
+
+	}
+
+
+	//if multiple selectors call extend-block on each 
+
+	@if( str-index($block, ',') ){
+
+
+		$blocks: str-explode($block, ",");
+
+
+		@each $b in $blocks{
+
+			@include extend-block( $b, $abstract );
+
+		}
+
+	}
+
+	@else {   
+
+		//remove all white-space from block
+
+		$block: str-trim( $block );
+
+
+		//only allow classes and placeholders to extend abstract blocks
+
+		@if str-index( $block, '.' ) != 1 and $block != '&' and $block != '__static__' and $block != '__proto__'{
+
+			//@error 'Could not create block: #{$block}; only classes can extend abstract blocks';
+
+		}
+
+		$abs-blocks: $abstract-blocks !global;
+		$child: $block;
+		$static-block-separator: $static-block-separator !global;
+		$debug:   $debug-mode !global;
+		$d-class: $debug-mode-class !global;
+
+		//give an error if the abstract block is not defined
+
+		@if not map-has-key( $abs-blocks, $abstract ){
+
+			//@error "Cannot extend undefined abstract block: '#{$abstract}' ";
+
+		}
+
+		//if the block is a prototype then treat it exactly
+		//like a static block
+
+		$isPrototype: ( $block == '__proto__' );
+
+        @if( $isPrototype ){
+
+        	$block: '__static__';
+
+        }
+
+        //if block is static, 
+        //use attribute selectors
+        //if it's also a prototype
+        //use the $block-class
+
+		$isStatic:    ( $block == '__static__' );
+
+		@if( $isStatic ){
+
+			$blk: $static-block-separator+$abstract;
+
+
+			@if( $isPrototype == false ){  
+
+
+                $child: "[class*='#{$blk} #{$static-block-class}']";
+
+			} @else{
+
+				$blk-class: $block-class !global;
+                $child:     $blk-class;       
+
+			}
+
+
+		}
+
+		//extend the abstract block
+
+		#{$child}{ 
+
+			@content;
+			@extend %#{$abstract};
+
+		}
+
+		//if debug is true assign special styles to block is nested under debug class
+		@if( $debug == true )
+		{
+
+			#{$d-class} #{$child}{
+
+
+				$d-blk: $child;
+
+				@if ( $isStatic )
+				{
+					$d-blk: $abstract;
+				}
+
+				@include abs-debug-styles( $abstract, $isStatic );
+
+				&::after{
+					content: "{ 'block' : '#{$abstract}', 'static' : #{$isStatic} }";
+					display: none;
+				}
+
+
+			}
+
+		}
+
+		//now inherit all it's properties
+
+		$properties: map-get( $abs-blocks, $abstract );
+
+		@if length( $properties ) > 0 {
+
+
+			$modifiers: $abstract-block-modifiers !global;
+
+	    
+			@each $p in $properties{
+	      
+
+				$pSelector: $child + $p; 
+
+
+				//if the selector is a modifier no need for static suffix
+				$isModifier: str-index( $pSelector, $static-block-modifier-separator );
+
+
+
+				//if block is static, use attr selector instead
+				//but do use static suffix for modifiers or prototypes 
+
+				@if( $isStatic ) {
+
+					$property: $p;
+
+					@if( $isPrototype == false ){
+
+						$property: $static-block-separator+$abstract+$property;
+
+					}
+
+					@if( type-of( $isModifier ) == "null" and $isPrototype == false ){
+
+						$property: $property+' '+$static-block-class;
+
+					}
+
+					//by default static selectors is the class with a delimiter
+					$pSelector: "[class*='#{$property}']";
+					
+					//if it's a prototype inheritance is required, use two selectors,
+					//and omit the delimiter
+					@if( $isPrototype ){
+
+						$pSelector: "[class$='#{$property}'],[class*='#{$property} ']";
+
+					}		
+					
+
+				}
+
+				//create property selector
+
+				#{$pSelector} {
+
+					@extend %#{$abstract}#{$p};
+
+				}
+
+			}
+
+		}
+
+	}
+
+}
+
+//create a static block 
+//classes will only have to follow the naming convention to inherit
+//the functionality of static blocks, rather than using extend-block directive
+// [class*="block static"] {}
+// [class*="block__element static"] 
+
+@mixin static-block( $abstract ){
+
+
+	@if( type-of( & ) == 'list' ){
+
+		//@error "static-block mixin cannot be nested in selector: '#{&}'";
+
+	}
+
+	@include extend-block( "__static__", $abstract );
+
+}
+
+//create prototype
+//the same as a static block without static keyword
+
+@mixin prototype( $abstract: prototype ){
+
+
+	@if( type-of( & ) == 'list' ){
+
+		//@error "static-block mixin cannot be nested in selector: '#{&}'";
+
+	}
+
+	@include extend-block( "__proto__", $abstract );
+
+}
+
+
+@mixin abs-debug(){
+
+	$blocks: $abstract-blocks !global;
+
+	@include json-encode( $blocks, regular );
+
+}
+
+
+@mixin abs-debug-styles( $block, $static ){
+
+	&:hover{
+
+		outline: 1px solid red;
+
+	}
+
+	&::after{
+		content: "{ 'block' : '#{$block}', 'static' : #{$static} }";
+		display: none;
+	}
+
+}

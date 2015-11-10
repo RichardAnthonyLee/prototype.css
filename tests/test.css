@@ -1,0 +1,68 @@
+/*! sassyjson - v1.1.8 - 2014-06-01 */
+/*! SassyStrings - v0.0.1 - 2014-02-16 */
+/* line 10, ../test.scss */
+.priority::after, [class*='-rule-priority static']::after {
+  content: " does this have higher priority? ";
+}
+
+/* line 18, ../test.scss */
+.priority__el, [class*='-rule-priority__el static'] {
+  display: none;
+}
+
+/* line 76, ../test.scss */
+.example-section__inner, [class*='-section__inner static'], .example-section, [class*='-section static'] {
+  display: block;
+}
+/* line 63, ../test.scss */
+.example-section__inner:after, [class*='-section__inner static']:after, .example-section:after, [class*='-section static']:after, .example-section__inner:before, [class*='-section__inner static']:before, .example-section:before, [class*='-section static']:before {
+  content: "";
+  display: table;
+}
+/* line 68, ../test.scss */
+.example-section__inner:after, [class*='-section__inner static']:after, .example-section:after, [class*='-section static']:after {
+  clear: both;
+}
+
+/* line 85, ../test.scss */
+.example-section__inner, [class*='-section__inner static'] {
+  max-width: 1100px;
+  margin: 0px auto;
+  padding: 20px;
+}
+
+/* line 96, ../test.scss */
+.example-section--wide, [class*='-section--wide'] {
+  width: 100%;
+}
+
+/* line 103, ../test.scss */
+.example-section__inner--half, [class*='-section__inner--half'] {
+  width: 50%;
+}
+
+/* line 119, ../test.scss */
+[class*='-example-block static'], .component, .b_, [class*='-example-block__child static'], .component__child, [class$='__child'], [class*='__child '] {
+  display: none;
+  padding: 5000px;
+  position: absolute;
+}
+
+/* line 128, ../test.scss */
+[class*='-example-block__second static'], .component__second, [class$='__second'], [class*='__second '] {
+  display: flex;
+}
+
+/* line 1033, ../_sassyJson.scss */
+body::before {
+  content: '{"rule-priority": ["__el"], "prototype": ["__title", "__body", "--loading"], "section": ["__inner", "--wide", "__inner--half"], "example-block": ["__child", "__second"]}';
+  display: block;
+  height: 0;
+  overflow: hidden;
+  width: 0;
+}
+
+/* line 1043, ../_sassyJson.scss */
+head {
+  font-family: '{"rule-priority": ["__el"], "prototype": ["__title", "__body", "--loading"], "section": ["__inner", "--wide", "__inner--half"], "example-block": ["__child", "__second"]}';
+}

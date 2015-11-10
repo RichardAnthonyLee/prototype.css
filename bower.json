@@ -1,0 +1,26 @@
+{
+  "name": "prototype.css",
+  "homepage": "https://github.com/QuallsBenson/prototype.css",
+  "authors": [
+    "Richard Lee <richard.lee@quallsbenson.com>"
+  ],
+  "description": "prototype.css is a BEM based scss library that applies object oriented principles, like abstract classes, inheritance, and multiple inheritance to css development.",
+  "main": "_prototype.scss",
+  "keywords": [
+    "css-blocks",
+    "bem",
+    "scss"
+  ],
+  "version": "0.0.0",
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ], 
+  "dependencies":{
+    "sassy-strings" : "1.1.4"
+  }
+}

@@ -1,0 +1,163 @@
+
+
+@import 'prototype';
+
+
+$debug-mode: false;
+
+%rule-priority{
+
+	&::after{
+		content: " does this have higher priority? ";
+	}	
+
+	@include block;
+
+}
+
+%rule-priority__el{
+
+	display: none;
+
+	@include block;
+
+}
+
+%prototype{
+
+	display: block;
+	height: auto;
+	width: 100%;
+	@include block;
+
+}
+
+
+%prototype__title{
+
+	display: block;
+	font-weight: bold;
+	margin: 20px 0px;
+	@include block;
+
+}
+
+%prototype__body{
+
+	display: block;
+	@include block;
+
+}
+
+%prototype--loading{
+
+	opacity: .5;
+	@include block;
+
+}
+
+
+@mixin clearfix(){
+ 
+
+	&:after, &:before{
+		content: "";
+		display: table;
+	}
+
+	&:after{
+		clear: both;
+	}
+
+}
+
+//test basic abstract block registration
+
+%section{
+
+	display: block;
+	@include clearfix;
+	@include block;
+
+}
+
+
+%section__inner{
+
+	max-width: 1100px;
+	margin: 0px auto;
+	padding: 20px;
+
+	@extend %section;
+	@include block;
+
+}
+
+%section--wide{
+
+	width: 100%;
+	@include block;  
+
+}
+
+%section__inner--half{
+
+	width: 50%;
+	@include block;
+
+}
+
+
+// extend the abstract blocks
+
+.example-section{
+
+	@include extend-block( section );
+
+}
+
+%example-block, %example-block__child{
+
+	display: none;
+	padding: 5000px;
+	position: absolute;
+	@include block;
+
+}
+
+%example-block__second{
+
+	display: flex;
+	@include block;
+
+}
+
+@include static-block( example-block );
+
+
+@include static-block( section );
+
+
+@include abs-debug;  
+
+.component{
+
+	@include extend-block( example-block );
+	@include extend-block( example-block );
+
+}
+
+.priority{
+
+	@include extend-block(rule-priority);
+
+}
+
+@include prototype( example-block );
+
+
+@include static-block( rule-priority );
+
+
+
+
